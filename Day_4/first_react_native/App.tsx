@@ -1,74 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-const CalculatorApp = () => {
-  const [num1, setNum1] = useState('');
-  const [num2, setNum2] = useState('');
-  const [result, setResult] = useState('');
+const App = () => {
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
+  const [winner, setWinner] = useState(null);
 
-  const handleCalculate = (operation) => {
-    const n1 = parseFloat(num1);
-    const n2 = parseFloat(num2);
+  //  winner logic
+  const calculateWinner = (board) => {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
 
-    if (isNaN(n1) || isNaN(n2)) {
-      setResult('Invalid input');
-      return;
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a]; // Return 'X' or 'O'
+      }
     }
+    return null;
+  };
 
-    switch (operation) {
-      case 'add':
-        setResult(n1 + n2);
-        break;
-      case 'subtract':
-        setResult(n1 - n2);
-        break;
-      case 'multiply':
-        setResult(n1 * n2);
-        break;
-      case 'divide':
-        setResult(n2 !== 0 ? n1 / n2 : 'Cannot divide by zero');
-        break;
-      default:
-        setResult('Unknown operation');
+  const handleClick = (index) => {
+    if (board[index] || winner) return; // If already filled or game over, do nothing
+
+    const newBoard = [...board];
+    newBoard[index] = isXNext ? 'X' : 'O';
+    setBoard(newBoard);
+    setIsXNext(!isXNext);
+
+    const gameWinner = calculateWinner(newBoard);
+    if (gameWinner) {
+      setWinner(gameWinner);
     }
   };
 
+  const renderSquare = (index) => (
+    <TouchableOpacity
+      style={[styles.square, styles[`square${index}`]]}
+      onPress={() => handleClick(index)}
+    >
+      <Text style={styles.squareText}>{board[index]}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Simple Calculator</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter first number"
-        keyboardType="numeric"
-        value={num1}
-        onChangeText={(text) => setNum1(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter second number"
-        keyboardType="numeric"
-        value={num2}
-        onChangeText={(text) => setNum2(text)}
-      />
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => handleCalculate('add')}>
-          <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => handleCalculate('subtract')}>
-          <Text style={styles.buttonText}>-</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => handleCalculate('multiply')}>
-          <Text style={styles.buttonText}>*</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => handleCalculate('divide')}>
-          <Text style={styles.buttonText}>/</Text>
-        </TouchableOpacity>
+      <Text style={styles.header}>Tic-Tac-Toe</Text>
+      <View style={styles.board}>
+        {Array.from({ length: 9 }).map((_, index) => renderSquare(index))}
       </View>
-
-      {result !== null && (
-        <Text style={styles.result}>Result: {result}</Text>
+      {winner && <Text style={styles.winnerText}>Winner: {winner}</Text>}
+      {!winner && !board.includes(null) && (
+        <Text style={styles.winnerText}>It's a draw!</Text>
       )}
     </View>
   );
@@ -79,46 +70,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 16,
+    padding: 20,
   },
-  title: {
+  header: {
     fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 20,
   },
-  input: {
-    width: '80%',
-    height: 50,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 16,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-  },
-  buttonContainer: {
+  board: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
+    flexWrap: 'wrap',
+    width: 300,
+    height: 300,
+    justifyContent: 'center',
   },
-  button: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 8,
-    width: '20%',
+  square: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#000',
   },
-  buttonText: {
-    color: '#fff',
+  squareText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+  },
+  winnerText: {
     fontSize: 18,
-    fontWeight: 'bold',
-  },
-  result: {
-    fontSize: 20,
     marginTop: 20,
-    fontWeight: 'bold',
+    color: 'green',
   },
 });
 
-export default CalculatorApp;
+export default App;
